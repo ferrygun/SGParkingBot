@@ -1,8 +1,3 @@
-//Dialogflow: SGParking
-//sgmrtarrivaltime@gmail.com 
-//sgparking-195907
-//https://sgparking-195907.appspot.com/webhook/
-
 'use strict'
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -26,7 +21,7 @@ let userlat = 0;
 let userlong = 0;
 let array_item = [];
 let arrayData = [];
-let baseurl = 'https://sgparking.herokuapp.com/';
+let baseurl = 'https://xxx.herokuapp.com/';
 let vehicletype = 0;
 
 function toRad(deg) {
