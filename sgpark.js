@@ -12,7 +12,7 @@ const app = express();
 const moment = require('moment');
 const querystring = require('querystring');
 const jwtDecode = require('jwt-decode');
-const token = 'EAAF3kBYO9t4BAJJbbc04dbaxqcOhdpM1apIEE2R3ZCwykpdSS7uTnx25dhRqzTP3zh1mFZCCprQpy0aNoQNcau2ZB9SS7ZC9KVGszHIfSZCD3ZCKkdjpZB6S6RIdv3eL7ZAxhZByZAeLQm84YFqv76WEA8kacl4dk2XnjdN7pnQ6xv3AZDZD';
+const token = '';
 const fs = require("fs");
 const path = require("path");
 
