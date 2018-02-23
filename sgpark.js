@@ -610,7 +610,8 @@ function MainProgram() {
 								});
 							}
 							else 
-								sendTextMessages(sender, 'There is no nearby carpark at this location.', false, 0);
+								sendTextMessage(sender, 'There is no nearby carpark at this location.', function(returnValue) {
+								});
 						}
 					});
 
