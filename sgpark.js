@@ -1,8 +1,3 @@
-//Dialogflow: SGParking
-//sgmrtarrivaltime@gmail.com 
-//sgparking-195907
-//https://sgparking.herokuapp.com/webhook/
-
 'use strict'
 const express = require('express');
 const bodyParser = require('body-parser');
