@@ -1,3 +1,8 @@
+//Dialogflow: SGParking
+//sgmrtarrivaltime@gmail.com 
+//sgparking-195907
+//https://sgparking.herokuapp.com/webhook/
+
 'use strict'
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -7,9 +12,11 @@ const app = express();
 const moment = require('moment');
 const querystring = require('querystring');
 const jwtDecode = require('jwt-decode');
-const token = UPDATE_WITH_THE_FB_PAGE_TOKEN;
+const token = 'UPDATE_WITH_THE_FB_PAGE_TOKEN';
 const fs = require("fs");
 const path = require("path");
+const apiai = require('apiai');
+const app2 = apiai("UPDATE_WITH_THE_DIALOGFLOW_TOKEN");
 
 const chunk_size = 10;
 let groups;
@@ -22,7 +29,7 @@ let userlong = 0;
 let array_item = [];
 let arrayData = [];
 let baseurl = 'https://sgparking.herokuapp.com/';
-let vehicletype = 0;
+let vehicletype;
 
 function toRad(deg) {
     return deg * Math.PI / 180;
@@ -49,6 +56,24 @@ function sleep(milliseconds) {
       break;
     }
   }
+}
+
+function senderAction (sender, payload) {
+    request({
+      method: 'POST',
+      uri: 'https://graph.facebook.com/v2.6/me/messages',
+      qs: {access_token: token},
+      json: {
+        recipient: { id: sender },
+        sender_action: payload
+      }
+    }, function(error, response, body) {
+      if (error) {
+		console.log('Error sending messages: ', error)
+      } else if (response.body.error) {
+        console.log('Error: ', response.body.error)
+      }
+    })
 }
 
 function getProfile(id, cb){
@@ -444,9 +469,12 @@ function sendLocation(sender, cb) {
 }
 
 function init() {
+	
 	/*
 	getCarPark(function (returnValue) {
 		returnValue = JSON.parse(returnValue);
+
+		console.log(returnValue);
 		let Distance = 0;
 		userlat = 1.297882;
 		userlong = 103.798058;
@@ -468,10 +496,8 @@ function init() {
 			}
 		}
 	});
-	*/
-	
 
-	getNewParkingOffer('QXTHM', 4, 30, function (returnValue) {
+	getNewParkingOffer('QXTHM', 0, 30, function (returnValue) {
 		if(returnValue != 'error') {
 			let returnValue_ = returnValue;
 			//console.log(returnValue);
@@ -488,6 +514,7 @@ function init() {
 			console.log('something error');
 		
 	});
+	*/
 }
 
 
@@ -535,6 +562,7 @@ function MainProgram() {
 						array_item = [
 							"Hi " + fname +", I am SGParking Bot",
 							"You can ask me the nearby carpark location and I can calculate the total cost based on the type of vehicle & duration.",
+							"Just send me your current location or let me know the car park ID, example: QXTHM."
 						];
 						sendTextMessages(sender, array_item, 0);
 					});					
@@ -561,6 +589,7 @@ function MainProgram() {
 					userlong = event.message.attachments[0].payload.coordinates.long;
 
 					console.log('userlat: ' + userlat + ', userlong: ' + userlong);
+					senderAction(sender, 'typing_on');
 					getCarPark(function(returnValue) {
 						returnValue = JSON.parse(returnValue);
 						let Distance = 0;
@@ -605,6 +634,7 @@ function MainProgram() {
 									.filter(function(e){ return e; });
 										for (let p=0; p<groups.length; p++){
 										sendMsg(groups[p], sender, function(returnValue) {
+											senderAction(sender, 'typing_off');
 										});
 									}
 								});
@@ -617,6 +647,7 @@ function MainProgram() {
 
 				}
 			} else if (event.message && event.message.hasOwnProperty('quick_reply')) { //***3
+				senderAction(sender, 'typing_on');
 				if(event.message.quick_reply.payload.split('_')[0] == 'VT') {
 					if(event.message.quick_reply.payload.split('_')[1] == 'CAR') 
 						vehicletype = 0;
@@ -630,9 +661,11 @@ function MainProgram() {
 						vehicletype = 4;
 
 					Howlong(sender, event.message.quick_reply.payload.split('_')[2], vehicletype, function (returnValue) {
+						senderAction(sender, 'typing_off');
 					});
 				}
 				else if(event.message.quick_reply.payload.split('_')[0] == 'HL') { //***4
+					senderAction(sender, 'typing_on');
 					//HL_0_' + label + '_' + vehicletype
 					let label = event.message.quick_reply.payload.split('_')[2];
 					let vehicletype = event.message.quick_reply.payload.split('_')[3];
@@ -696,6 +729,7 @@ function MainProgram() {
 								}
 
 								sendTextMessage(sender, 'Total cost: $' + decoded.session_cost/100 + '. Session ends: ' + enddate + ' ' + endtime, function(returnValue) {
+									senderAction(sender, 'typing_off');
 								});
 							} else {
 								console.log(returnValue);
@@ -710,8 +744,46 @@ function MainProgram() {
 			} else if (event.message && event.message.text) {
 				let text = event.message.text;
 				console.log(text);
-				VehicleType(sender, text.trim().toUpperCase(), function(returnValue) {
+				senderAction(sender, 'typing_on');
+
+				getProfile(sender, function(returnValue) {
+					let fname = returnValue.first_name;
+
+					let request = app2.textRequest(text, {
+					  'sessionId': sender,
+					  'resetContexts': true
+					});
+
+					request.on('response', function(response) {
+						let action = response.result.action;
+
+						if(action == 'input.welcome') {
+							sendTextMessage(sender, response.result.fulfillment.speech, function(returnValue) {
+								senderAction(sender, 'typing_off');
+							});
+						}
+
+						if(action == 'input.exit') {
+							sendTextMessage(sender, response.result.fulfillment.speech, function(returnValue) {
+								senderAction(sender, 'typing_off');
+							});
+						}
+
+						if(action == 'input.unknown') {
+							VehicleType(sender, text.trim().toUpperCase(), function(returnValue) {
+								senderAction(sender, 'typing_off');
+							});
+						}
+					});
+
+					request.on('error', function(error) {
+						console.log(error);
+					});
+
+					request.end();
+
 				});
+
 			}
 			
 		}
