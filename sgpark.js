@@ -7,7 +7,7 @@ const app = express();
 const moment = require('moment');
 const querystring = require('querystring');
 const jwtDecode = require('jwt-decode');
-const token = '';
+const token = UPDATE_WITH_THE_FB_PAGE_TOKEN;
 const fs = require("fs");
 const path = require("path");
 
@@ -21,7 +21,7 @@ let userlat = 0;
 let userlong = 0;
 let array_item = [];
 let arrayData = [];
-let baseurl = 'https://xxx.herokuapp.com/';
+let baseurl = 'https://sgparking.herokuapp.com/';
 let vehicletype = 0;
 
 function toRad(deg) {
